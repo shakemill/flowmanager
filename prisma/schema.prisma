@@ -1,0 +1,423 @@
+// Gestion courrier Mairie - MySQL + Prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// npm run db:seed pour créer l'admin initial
+
+// --- Phase 0 & Auth ---
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courriersCreated   Courrier[]           @relation("CreatedBy")
+  courriersAssigned  Courrier[]           @relation("AssignedTo")
+  userOrganisationUnits UserOrganisationUnit[]
+  userRoles          UserRole[]
+  unitesRecipiendaire OrganisationUnit[] @relation("Recipiendaire")
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  historiqueVisas    HistoriqueVisa[]
+  visaDemandes       VisaDemande[]
+  visaDemandesDemandeur VisaDemande[]     @relation("VisaDemandeDemandeur")
+  transfertsEnvoyes  CourrierTransfert[]  @relation("TransfertFrom")
+  transfertsRecus    CourrierTransfert[]  @relation("TransfertToUser")
+  piecesJointesUploaded PieceJointe[]     @relation("PieceJointeUploadedBy")
+  eparapheurEnvoisEnvoyes EparapheurEnvoi[] @relation("EparapheurEnvoiEnvoyeur")
+  eparapheurTraitements EparapheurTraitement[]
+}
+
+// Rôles métier (plusieurs par utilisateur), en plus du rôle principal User.role (admin/user)
+model Role {
+  id       String   @id @default(cuid())
+  code     String   @unique
+  libelle  String
+  createdAt DateTime @default(now())
+
+  userRoles UserRole[]
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model Contact {
+  id             String       @id @default(cuid())
+  nom            String
+  type           ContactType  @default(PERSONNE)
+  raisonSociale  String?
+  email          String?
+  telephone      String?
+  adresse        String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  courriersExpediteur Courrier[]
+}
+
+enum ContactType {
+  PERSONNE
+  SOCIETE
+}
+
+model OrganisationUnit {
+  id       String   @id @default(cuid())
+  libelle  String
+  parentId String?
+  niveau   Int      @default(0)
+  ordre    Int      @default(0)
+  actif    Boolean  @default(true)
+  /** Si true, l'unité apparaît dans la liste "Entité traitante" à l'enregistrement du courrier. */
+  entiteTraitante Boolean @default(true)
+  recipiendaireId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   OrganisationUnit?  @relation("OrganisationTree", fields: [parentId], references: [id])
+  children OrganisationUnit[] @relation("OrganisationTree")
+  recipiendaire User?        @relation("Recipiendaire", fields: [recipiendaireId], references: [id], onDelete: SetNull)
+  courriers Courrier[]
+  banettes Banette[]
+  userOrganisationUnits UserOrganisationUnit[]
+  etapeWorkflows EtapeWorkflow[]
+  transfertsRecus CourrierTransfert[]
+}
+
+// --- Typologie courrier (2 niveaux) ---
+model TypologieCourrier {
+  id        String   @id @default(cuid())
+  libelle   String
+  parentId String?
+  ordre     Int      @default(0)
+  actif     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   TypologieCourrier?  @relation("TypologieTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children TypologieCourrier[] @relation("TypologieTree")
+  courriers Courrier[]
+}
+
+// --- Phase 1: Courrier ---
+model Courrier {
+  id                   String    @id @default(cuid())
+  numero               String    @unique
+  priorite             Priorite  @default(NORMAL)
+  dateCourrier         DateTime
+  dateArrivee          DateTime
+  objet                String
+  expediteurId         String
+  entiteTraitanteId    String
+  typologieId          String?
+  documentPrincipalPath String?
+  statut               StatutCourrier @default(ENREGISTRE)
+  banetteId            String?
+  assignedToId         String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  createdById          String?
+
+  expediteur       Contact          @relation(fields: [expediteurId], references: [id], onDelete: Restrict)
+  entiteTraitante  OrganisationUnit @relation(fields: [entiteTraitanteId], references: [id], onDelete: Restrict)
+  typologie        TypologieCourrier? @relation(fields: [typologieId], references: [id], onDelete: SetNull)
+  createdBy        User?            @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo       User?            @relation("AssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  banette          Banette?         @relation(fields: [banetteId], references: [id])
+  piecesJointes    PieceJointe[]
+  instanceCircuits InstanceCircuit[]
+  accuseReceptions  AccuseReception[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  visaDemandes     VisaDemande[]
+  transferts        CourrierTransfert[]
+  eparapheurEnvois EparapheurEnvoi[]
+}
+
+model CourrierTransfert {
+  id         String   @id @default(cuid())
+  courrierId String
+  fromUserId String?
+  toUserId   String?
+  toUnitId   String?
+  note       String?
+  createdAt  DateTime @default(now())
+
+  courrier  Courrier  @relation(fields: [courrierId], references: [id], onDelete: Cascade)
+  fromUser  User?     @relation("TransfertFrom", fields: [fromUserId], references: [id], onDelete: SetNull)
+  toUser    User?     @relation("TransfertToUser", fields: [toUserId], references: [id], onDelete: SetNull)
+  toUnit    OrganisationUnit? @relation(fields: [toUnitId], references: [id], onDelete: SetNull)
+}
+
+model VisaDemande {
+  id          String   @id @default(cuid())
+  courrierId  String
+  userId      String
+  demandeurId String?
+  ordre       Int      @default(0)
+  statut      StatutVisaDemande @default(EN_ATTENTE)
+  commentaire String?
+  dateReponse DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courrier   Courrier @relation(fields: [courrierId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  demandeur  User?    @relation("VisaDemandeDemandeur", fields: [demandeurId], references: [id], onDelete: SetNull)
+}
+
+enum StatutVisaDemande {
+  EN_ATTENTE
+  VISE
+  REFUSE
+}
+
+enum Priorite {
+  BASSE
+  NORMAL
+  HAUTE
+  URGENT
+}
+
+enum StatutCourrier {
+  ENREGISTRE
+  EN_TRAITEMENT
+  EN_VISA
+  VISÉ
+  CLOTURE
+  ANNULE
+}
+
+model PieceJointe {
+  id             String   @id @default(cuid())
+  courrierId     String
+  nomFichier     String
+  cheminStockage String
+  typeMime       String
+  taille         Int      @default(0)
+  ordre          Int      @default(0)
+  principal      Boolean  @default(false)
+  uploadedById   String?
+  createdAt      DateTime @default(now())
+
+  courrier   Courrier @relation(fields: [courrierId], references: [id], onDelete: Cascade)
+  uploadedBy User?    @relation("PieceJointeUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  eparapheurDocuments EparapheurDocument[]
+}
+
+// --- Éparapheur (tablette / signature) ---
+enum StatutEparapheurEnvoi {
+  EN_ATTENTE
+  VALIDE
+  REJETE
+}
+
+model EparapheurEnvoi {
+  id         String                @id @default(cuid())
+  courrierId String
+  envoyeurId String
+  statut     StatutEparapheurEnvoi @default(EN_ATTENTE)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  courrier   Courrier   @relation(fields: [courrierId], references: [id], onDelete: Cascade)
+  envoyeur   User       @relation("EparapheurEnvoiEnvoyeur", fields: [envoyeurId], references: [id], onDelete: Cascade)
+  documents  EparapheurDocument[]
+  traitement EparapheurTraitement?
+}
+
+model EparapheurDocument {
+  id                 String          @id @default(cuid())
+  eparapheurEnvoiId  String
+  pieceJointeId      String?
+  estPrincipal       Boolean         @default(false)
+  ordre              Int             @default(0)
+  createdAt          DateTime        @default(now())
+
+  eparapheurEnvoi EparapheurEnvoi @relation(fields: [eparapheurEnvoiId], references: [id], onDelete: Cascade)
+  pieceJointe     PieceJointe?    @relation(fields: [pieceJointeId], references: [id], onDelete: SetNull)
+}
+
+model EparapheurTraitement {
+  id                   String   @id @default(cuid())
+  eparapheurEnvoiId    String   @unique
+  traiteParUserId      String
+  statut               StatutEparapheurEnvoi
+  commentaire          String?
+  cheminDocumentAnnote String?
+  dateTraitement       DateTime @default(now())
+
+  eparapheurEnvoi EparapheurEnvoi @relation(fields: [eparapheurEnvoiId], references: [id], onDelete: Cascade)
+  traitePar       User             @relation(fields: [traiteParUserId], references: [id], onDelete: Cascade)
+}
+
+// --- Phase 2: Banettes & Droits ---
+model Banette {
+  id          String   @id @default(cuid())
+  libelle     String
+  code        String   @unique
+  description String?
+  entiteId    String?
+  ordre       Int      @default(0)
+  actif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  entite   OrganisationUnit? @relation(fields: [entiteId], references: [id])
+  courriers Courrier[]
+}
+
+enum NiveauAcces {
+  LECTURE
+  TRAITEMENT
+  VALIDATION
+  ADMIN
+}
+
+model UserOrganisationUnit {
+  id                  String       @id @default(cuid())
+  userId              String
+  organisationUnitId  String
+  niveauAcces         NiveauAcces  @default(LECTURE)
+  createdAt           DateTime     @default(now())
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisationUnit OrganisationUnit @relation(fields: [organisationUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organisationUnitId])
+}
+
+// --- Phase 3: Workflow ---
+model Workflow {
+  id          String   @id @default(cuid())
+  nom         String
+  description String?
+  actif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  etapes EtapeWorkflow[]
+  instances InstanceCircuit[]
+}
+
+model EtapeWorkflow {
+  id                 String   @id @default(cuid())
+  workflowId         String
+  ordre              Int
+  libelle            String
+  type               TypeEtape @default(SAISIE)
+  organisationUnitId String?
+  delaiJours         Int?
+  createdAt          DateTime @default(now())
+
+  workflow         Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  organisationUnit OrganisationUnit? @relation(fields: [organisationUnitId], references: [id])
+  historiqueVisas  HistoriqueVisa[]
+  instanceCircuitsEtapeActuelle InstanceCircuit[] @relation("EtapeActuelle")
+}
+
+enum TypeEtape {
+  SAISIE
+  VISA
+  SIGNATURE
+  ENVOI
+}
+
+model InstanceCircuit {
+  id                String   @id @default(cuid())
+  courrierId        String
+  workflowId        String
+  etapeActuelleId   String?
+  statut            StatutCircuit @default(EN_COURS)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  courrier       Courrier       @relation(fields: [courrierId], references: [id], onDelete: Cascade)
+  workflow       Workflow       @relation(fields: [workflowId], references: [id], onDelete: Restrict)
+  etapeActuelle  EtapeWorkflow? @relation("EtapeActuelle", fields: [etapeActuelleId], references: [id])
+  historiqueVisas HistoriqueVisa[]
+}
+
+enum StatutCircuit {
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+model HistoriqueVisa {
+  id                String   @id @default(cuid())
+  instanceCircuitId String
+  etapeWorkflowId  String
+  userId           String
+  action           ActionVisa
+  commentaire      String?
+  date             DateTime @default(now())
+
+  instanceCircuit InstanceCircuit @relation(fields: [instanceCircuitId], references: [id], onDelete: Cascade)
+  etapeWorkflow   EtapeWorkflow   @relation(fields: [etapeWorkflowId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ActionVisa {
+  VISE
+  REFUSE
+  DELEGUE
+}
+
+// --- Phase 4: Accusés & Notifications ---
+model AccuseReception {
+  id           String   @id @default(cuid())
+  courrierId   String
+  type         String
+  dateEnvoi    DateTime @default(now())
+  destinataire String?
+  statut       String   @default("envoye")
+  modeEnvoi    String?
+  corpsMessage String?  @db.Text
+
+  courrier Courrier @relation(fields: [courrierId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  titre      String
+  message    String
+  lue        Boolean  @default(false)
+  courrierId String?
+  createdAt  DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courrier Courrier? @relation(fields: [courrierId], references: [id], onDelete: SetNull)
+}
+
+// --- Phase 5: Tracabilité ---
+model AuditLog {
+  id         String   @id @default(cuid())
+  courrierId String?
+  userId     String
+  action     String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  courrier Courrier? @relation(fields: [courrierId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
