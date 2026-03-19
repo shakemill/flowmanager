@@ -10,7 +10,6 @@ import SidebarLayout from '../sidebar/Sidebar'
 import FullLogo from '../shared/logo/FullLogo'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const Header = () => {
   const { theme, setTheme } = useTheme()
@@ -141,9 +140,7 @@ const Header = () => {
       {/* Mobile Sidebar */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent side='left' className='w-64 p-0'>
-          <VisuallyHidden>
-            <SheetTitle>sidebar</SheetTitle>
-          </VisuallyHidden>
+          <SheetTitle className="sr-only">sidebar</SheetTitle>
           <SidebarLayout onClose={() => setIsOpen(false)} />
         </SheetContent>
       </Sheet>
