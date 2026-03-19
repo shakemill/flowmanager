@@ -85,8 +85,9 @@ const VIEW_KEYS: ViewKey[] = ['a_traiter', 'mon_service', 'en_attente_mes_avis',
 
 export default function MesBanettesPage() {
   const searchParams = useSearchParams();
-  const viewFromUrl = searchParams.get('view') as ViewKey | null;
-  const [view, setView] = useState<ViewKey>(VIEW_KEYS.includes(viewFromUrl ?? '') ? viewFromUrl! : 'a_traiter');
+  const viewFromUrl = searchParams.get('view');
+  const initialView: ViewKey = viewFromUrl && VIEW_KEYS.includes(viewFromUrl as ViewKey) ? (viewFromUrl as ViewKey) : 'a_traiter';
+  const [view, setView] = useState<ViewKey>(initialView);
   const [courriers, setCourriers] = useState<CourrierRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
