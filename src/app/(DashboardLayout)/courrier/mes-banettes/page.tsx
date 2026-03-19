@@ -145,7 +145,7 @@ export default function MesBanettesPage() {
           ))}
         </div>
         <div className="mb-2 text-sm text-muted-foreground flex items-center gap-2">
-          <Icon icon={currentView?.icon} className="size-4" />
+          <Icon icon={currentView?.icon ?? 'solar:clipboard-list-linear'} className="size-4" />
           {currentView?.label}
           <span className="font-medium text-foreground">({total})</span>
         </div>
