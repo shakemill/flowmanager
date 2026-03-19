@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import FullLogo from '@/app/(DashboardLayout)/layout/shared/logo/FullLogo'
@@ -12,14 +12,33 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/lib/toast'
 
+const ERROR_MESSAGES: Record<string, string> = {
+  CredentialsSignin: 'Email ou mot de passe incorrect',
+  Default: 'Une erreur est survenue. Réessayez.',
+}
+
 export const Login = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') ?? '/'
+  const errorParam = searchParams.get('error')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
+  const errorShownRef = useRef(false)
+
+  // Afficher l'erreur renvoyée par NextAuth (ex: après redirection depuis /error)
+  useEffect(() => {
+    if (!errorParam || errorShownRef.current) return
+    errorShownRef.current = true
+    const msg = ERROR_MESSAGES[errorParam] ?? ERROR_MESSAGES.Default
+    toast.error(msg)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('error')
+    url.searchParams.delete('error_description')
+    window.history.replaceState({}, '', url.pathname + url.search)
+  }, [errorParam])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
