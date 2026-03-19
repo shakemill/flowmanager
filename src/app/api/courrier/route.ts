@@ -136,9 +136,8 @@ export async function GET(request: NextRequest) {
 
     if (userId) {
       const visibilityClause = await getCourrierVisibilityWhere(userId);
-      if (!where.AND) where.AND = [];
-      if (!Array.isArray(where.AND)) where.AND = [where.AND as Record<string, unknown>];
-      where.AND = [visibilityClause, ...where.AND];
+      const existingAnd = Array.isArray(where.AND) ? where.AND : (where.AND != null ? [where.AND] : []);
+      where.AND = [visibilityClause, ...existingAnd];
     }
 
     const [courriers, total] = await Promise.all([

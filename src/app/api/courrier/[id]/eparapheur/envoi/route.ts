@@ -16,7 +16,7 @@ export async function POST(
     if (!canAct) return apiError('Vous n\'êtes pas destinataire de ce courrier.', 403, 'FORBIDDEN');
 
     const body = await request.json();
-    const pieceJointeIds = Array.isArray(body.pieceJointeIds) ? body.pieceJointeIds.filter((id: unknown) => typeof id === 'string') : [];
+    const pieceJointeIds: string[] = Array.isArray(body.pieceJointeIds) ? body.pieceJointeIds.filter((id: unknown): id is string => typeof id === 'string') : [];
     const inclureDocumentPrincipal = Boolean(body.inclureDocumentPrincipal);
 
     if (!inclureDocumentPrincipal && pieceJointeIds.length === 0) {

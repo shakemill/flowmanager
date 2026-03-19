@@ -55,11 +55,9 @@ function TreeNode({
         <span className="font-medium">{unit.libelle}</span>
         <span className="text-xs text-muted-foreground">(niveau {unit.niveau})</span>
         {unit.entiteTraitante !== false && (
-          <Icon
-            icon="solar:document-text-linear"
-            className="size-4 text-muted-foreground"
-            title="Affichée comme entité traitante à l'enregistrement du courrier"
-          />
+          <span title="Affichée comme entité traitante à l'enregistrement du courrier">
+            <Icon icon="solar:document-text-linear" className="size-4 text-muted-foreground" />
+          </span>
         )}
         {unit.recipiendaire && (
           <span className="text-xs text-primary flex items-center gap-1" title="Récipiendaire du courrier">

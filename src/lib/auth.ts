@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { compare } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -81,7 +81,7 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
-};
+} as NextAuthOptions;
 
 export async function getSession() {
   return getServerSession(authOptions);

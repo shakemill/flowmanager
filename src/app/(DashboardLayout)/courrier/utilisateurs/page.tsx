@@ -96,15 +96,17 @@ function userInitials(name: string | null, email: string): string {
   return email.slice(0, 2).toUpperCase();
 }
 
+type UnitTreeNode = { id: string; libelle: string; children?: UnitTreeNode[] };
+
 function flattenUnits(
-  nodes: { id: string; libelle: string; children?: { id: string; libelle: string; children?: unknown[] }[] }[],
+  nodes: UnitTreeNode[],
   level = 0
 ): { id: string; libelle: string; indent: string }[] {
   const out: { id: string; libelle: string; indent: string }[] = [];
   for (const n of nodes) {
     out.push({ id: n.id, libelle: n.libelle, indent: '—'.repeat(level) });
     if (n.children?.length) {
-      out.push(...flattenUnits(n.children as { id: string; libelle: string; children?: unknown[] }[], level + 1));
+      out.push(...flattenUnits(n.children, level + 1));
     }
   }
   return out;
@@ -113,7 +115,7 @@ function flattenUnits(
 export default function GestionUtilisateursPage() {
   const { data: session, status } = useSession();
   const [users, setUsers] = useState<User[]>([]);
-  const [unitTree, setUnitTree] = useState<{ id: string; libelle: string; children?: unknown[] }[]>([]);
+  const [unitTree, setUnitTree] = useState<UnitTreeNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignUser, setAssignUser] = useState<User | null>(null);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import BreadcrumbComp from '@/app/(DashboardLayout)/layout/shared/breadcrumb/BreadcrumbComp';
@@ -83,7 +83,7 @@ function statutLabel(s: string): string {
 
 const VIEW_KEYS: ViewKey[] = ['a_traiter', 'mon_service', 'en_attente_mes_avis', 'transferes_a_moi', 'en_attente_avis', 'retour_avis', 'archives'];
 
-export default function MesBanettesPage() {
+function MesBanettesContent() {
   const searchParams = useSearchParams();
   const viewFromUrl = searchParams.get('view');
   const initialView: ViewKey = viewFromUrl && VIEW_KEYS.includes(viewFromUrl as ViewKey) ? (viewFromUrl as ViewKey) : 'a_traiter';
@@ -230,5 +230,18 @@ export default function MesBanettesPage() {
         )}
       </CardBox>
     </>
+  );
+}
+
+export default function MesBanettesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        <Icon icon="solar:refresh-linear" className="size-6 animate-spin mr-2" />
+        Chargement...
+      </div>
+    }>
+      <MesBanettesContent />
+    </Suspense>
   );
 }

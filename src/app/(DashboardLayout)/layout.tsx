@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import Header from './layout/header/Header'
 import Sidebar from './layout/sidebar/Sidebar'
 
@@ -14,7 +15,9 @@ export default function Layout({
         <div className='page-wrapper flex w-full'>
           {/* Header/sidebar */}
           <div className='xl:block hidden'>
-            <Sidebar />
+            <Suspense fallback={<div className="w-64 min-h-screen bg-muted/20 animate-pulse" />}>
+              <Sidebar />
+            </Suspense>
           </div>
 
           <div className='body-wrapper w-full'>
