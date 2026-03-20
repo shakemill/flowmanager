@@ -23,7 +23,7 @@ export async function DELETE(
     if (piece.principal) {
       return apiError('Le document principal ne peut pas être supprimé', 400);
     }
-    if (piece.uploadedById != null && String(piece.uploadedById).trim() !== String(userId).trim()) {
+    if (piece.uploadedById == null || String(piece.uploadedById).trim() !== String(userId).trim()) {
       return apiError('Seul l\'utilisateur ayant déposé le fichier peut le supprimer.', 403, 'FORBIDDEN');
     }
     const filePath = path.resolve(process.cwd(), piece.cheminStockage);

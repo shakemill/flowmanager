@@ -829,6 +829,7 @@ export default function CourrierDetailPage() {
                 const isEditable = /\.(docx?|xlsx?|txt)$/i.test(p.nomFichier ?? '');
                 const isPreviewable = /\.(pdf|jpe?g|png|gif|webp)$/i.test(p.nomFichier ?? '');
                 const canEditOrDelete = currentUserId != null && (p.uploadedById == null || String(p.uploadedById) === String(currentUserId));
+                const canDelete = currentUserId != null && p.uploadedById != null && String(p.uploadedById) === String(currentUserId);
                 return (
                   <li key={p.id} className="flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2">
                     <span className="flex items-center gap-2 min-w-0">
@@ -865,7 +866,7 @@ export default function CourrierDetailPage() {
                           <Icon icon="solar:download-linear" className="size-4" />
                         </a>
                       </Button>
-                      {canEditOrDelete && !p.principal && (
+                      {canDelete && !p.principal && (
                         <Button
                           type="button"
                           variant="ghost"
