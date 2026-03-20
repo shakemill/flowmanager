@@ -80,6 +80,8 @@ export async function GET() {
         switch (view) {
           case 'a_traiter': {
             const orClauses: Record<string, unknown>[] = [{ assignedToId: userId }];
+            // Le récipiendaire de l'entité traitante doit aussi compter dans "À traiter"
+            orClauses.push({ entiteTraitante: { recipiendaireId: userId } });
             if (unitIds.length) {
               orClauses.push({
                 entiteTraitanteId: { in: unitIds },
