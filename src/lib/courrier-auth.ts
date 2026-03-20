@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 async function getUnitIdsWithDescendants(unitIds: string[]): Promise<string[]> {
@@ -131,4 +132,52 @@ export async function getCourrierVisibilityWhere(userId: string): Promise<Record
   orClauses.push({ visaDemandes: { some: { userId } } });
 
   return { OR: orClauses };
+}
+
+/** Unités dont l'utilisateur est le récipiendaire (organigramme). */
+export async function getRecipiendaireRootUnitIds(userId: string): Promise<string[]> {
+  const units = await prisma.organisationUnit.findMany({
+    where: { recipiendaireId: userId, actif: true },
+    select: { id: true },
+  });
+  return units.map((u) => u.id);
+}
+
+/** Périmètre hiérarchique : racines récipiendaire + toutes les unités descendantes. */
+export async function getRecipiendairePerimeterUnitIds(userId: string): Promise<string[]> {
+  const roots = await getRecipiendaireRootUnitIds(userId);
+  if (roots.length === 0) return [];
+  return getUnitIdsWithDescendants(roots);
+}
+
+/**
+ * Filtre Courrier pour les stats « responsable organigramme » : entité traitante dans le périmètre,
+ * optionnellement borné par dateArrivee.
+ */
+export function buildOrganigrammeCourrierWhere(
+  perimeterUnitIds: string[],
+  opts?: { dateFrom?: Date; dateTo?: Date }
+): Prisma.CourrierWhereInput {
+  const and: Prisma.CourrierWhereInput[] = [{ entiteTraitanteId: { in: perimeterUnitIds } }];
+  if (opts?.dateFrom || opts?.dateTo) {
+    const dateArrivee: Prisma.DateTimeFilter = {};
+    if (opts.dateFrom) {
+      const d = new Date(opts.dateFrom);
+      d.setHours(0, 0, 0, 0);
+      dateArrivee.gte = d;
+    }
+    if (opts.dateTo) {
+      const d = new Date(opts.dateTo);
+      d.setHours(23, 59, 59, 999);
+      dateArrivee.lte = d;
+    }
+    and.push({ dateArrivee });
+  }
+  return { AND: and };
+}
+
+/** True si l'utilisateur peut accéder aux statistiques périmètre (au moins une unité en récipiendaire). */
+export async function canViewOrganigrammeStats(userId: string): Promise<boolean> {
+  const roots = await getRecipiendaireRootUnitIds(userId);
+  return roots.length > 0;
 }

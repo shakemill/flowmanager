@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react'
 import { APP_LOGO_SRC } from '@/lib/constants'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import SidebarContent from './Sidebaritems'
+import SidebarContent, { type ChildItem } from './Sidebaritems'
 import SimpleBar from 'simplebar-react'
 import { Icon } from '@iconify/react'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,6 @@ import {
   AMSubmenu,
 } from 'tailwind-sidebar'
 import 'tailwind-sidebar/styles.css'
-import type { ChildItem } from './Sidebaritems'
 
 function BanettesSubmenu({
   item,
@@ -176,9 +175,21 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
   const { data: session } = useSession()
   const isAdmin = (session?.user as { role?: string } | undefined)?.role === 'admin'
   const [mounted, setMounted] = useState(false)
+  const [canViewOrganigrammeStats, setCanViewOrganigrammeStats] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/me')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.error && data.canViewOrganigrammeStats === true) {
+          setCanViewOrganigrammeStats(true)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   // Only allow "light" or "dark" for AMSidebar
@@ -237,9 +248,12 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
       <SimpleBar className='h-[calc(100vh-10vh)]'>
         <div className='px-6'>
           {SidebarContent.map((section, index) => {
-            const children = (section.children || []).filter(
-              (item) => item.name !== 'Configuration' || isAdmin
-            )
+            const children = (section.children || []).filter((item) => {
+              const c = item as ChildItem
+              if (item.name === 'Configuration' && !isAdmin) return false
+              if (c.requiresOrganigrammeStats && !canViewOrganigrammeStats) return false
+              return true
+            })
             return (
               <div key={index}>
                 {renderSidebarItems(

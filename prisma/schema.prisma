@@ -99,6 +99,8 @@ model OrganisationUnit {
   userOrganisationUnits UserOrganisationUnit[]
   etapeWorkflows EtapeWorkflow[]
   transfertsRecus CourrierTransfert[]
+
+  @@index([recipiendaireId])
 }
 
 // --- Typologie courrier (2 niveaux) ---
@@ -149,6 +151,10 @@ model Courrier {
   visaDemandes     VisaDemande[]
   transferts        CourrierTransfert[]
   eparapheurEnvois EparapheurEnvoi[]
+
+  @@index([entiteTraitanteId])
+  @@index([dateArrivee])
+  @@index([entiteTraitanteId, dateArrivee])
 }
 
 model CourrierTransfert {

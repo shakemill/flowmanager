@@ -15,6 +15,8 @@ export interface ChildItem {
   isPro?: boolean
   /** Clé de vue banette (a_traiter, mon_service, etc.) pour afficher le comptage */
   viewKey?: string
+  /** Réservé aux utilisateurs récipiendaire sur l’organigramme (voir /api/me) */
+  requiresOrganigrammeStats?: boolean
 }
 
 export interface MenuItem {
@@ -57,6 +59,14 @@ const SidebarContent: MenuItem[] = [
         id: uniqueId(),
         url: '/courrier',
         isPro: false,
+      },
+      {
+        name: 'Statistiques périmètre',
+        icon: 'solar:chart-square-linear',
+        id: uniqueId(),
+        url: '/courrier/statistiques-organigramme',
+        isPro: false,
+        requiresOrganigrammeStats: true,
       },
       {
         name: 'Mes banettes',
