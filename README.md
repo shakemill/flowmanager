@@ -98,9 +98,13 @@ npx prisma migrate dev --name nom_de_la_migration
 ### Variables d'environnement
 
 - `DATABASE_URL` : URL MySQL (requis pour le module courrier).
+- `NEXTAUTH_URL` : URL publique exacte du site **sans slash final** (ex. `http://13.135.137.57:3000` ou `https://courrier.example.com`). Obligatoire en production pour les cookies de session.
+- `NEXTAUTH_SECRET` : secret pour signer le JWT (générer avec `openssl rand -base64 32`).
 - `NEXT_PUBLIC_APP_URL` : URL publique de l’app (pour OnlyOffice et callbacks).
 - `ONLYOFFICE_SERVER_URL`, `ONLYOFFICE_JWT_SECRET` : optionnel, pour l’édition de documents.
 - `UPLOAD_DIR` : optionnel, répertoire des uploads (défaut : `uploads` à la racine du projet).
+
+**Connexion qui revient sur la page login (HTTP / IP)** : définir `NEXTAUTH_URL` sur la même origine que le navigateur (`http://…`). Le projet force `useSecureCookies` seulement si `NEXTAUTH_URL` commence par `https://`, sinon les cookies fonctionnent en HTTP. En production derrière HTTPS, utiliser une URL `https://…` cohérente avec le proxy.
 
 ### OnlyOffice : erreur « Impossible d'enregistrer le document »
 

@@ -4,6 +4,14 @@ import { getServerSession } from 'next-auth';
 import { compare } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * Cookies « Secure » uniquement si l’URL canonique est en HTTPS.
+ * Sinon (ex. http://IP:3000 en prod), le navigateur refuse le cookie de session
+ * → connexion OK puis retour immédiat sur /auth/login.
+ */
+const nextAuthUrl = process.env.NEXTAUTH_URL ?? '';
+const useSecureCookies = nextAuthUrl.startsWith('https://');
+
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -82,6 +90,7 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
+  useSecureCookies,
 } as NextAuthOptions;
 
 export async function getSession() {
