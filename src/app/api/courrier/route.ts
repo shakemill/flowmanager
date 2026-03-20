@@ -16,7 +16,7 @@ async function generateNumero(): Promise<string> {
   return `${year}-${String(seq).padStart(6, '0')}`;
 }
 
-/** Retourne les ids des unités de l'utilisateur + toutes les unités descendantes (enfants, petits-enfants…). */
+/** Retourne les ids des unités + toutes les unités descendantes (enfants, petits-enfants…). */
 async function getUnitIdsWithDescendants(unitIds: string[]): Promise<string[]> {
   if (unitIds.length === 0) return [];
   const all = await prisma.organisationUnit.findMany({
@@ -44,6 +44,31 @@ async function getUnitIdsWithDescendants(unitIds: string[]): Promise<string[]> {
   return Array.from(result);
 }
 
+/** Périmètre utilisateur = unités d'affectation + unités où il est récipiendaire (avec descendants). */
+async function getEffectiveUnitIds(userId: string): Promise<string[]> {
+  const [memberUnitIds, recipiendaireRootIds] = await Promise.all([
+    prisma.userOrganisationUnit
+      .findMany({
+        where: { userId },
+        select: { organisationUnitId: true },
+      })
+      .then((r) => r.map((x) => x.organisationUnitId)),
+    prisma.organisationUnit
+      .findMany({
+        where: { recipiendaireId: userId, actif: true },
+        select: { id: true },
+      })
+      .then((r) => r.map((x) => x.id)),
+  ]);
+
+  const [memberPerimeter, recipiendairePerimeter] = await Promise.all([
+    getUnitIdsWithDescendants(memberUnitIds),
+    getUnitIdsWithDescendants(recipiendaireRootIds),
+  ]);
+
+  return Array.from(new Set([...memberPerimeter, ...recipiendairePerimeter]));
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -69,11 +94,7 @@ export async function GET(request: NextRequest) {
 
     const userId = await getCurrentUserId();
     if (view && userId) {
-      const myDirectUnitIds = await prisma.userOrganisationUnit.findMany({
-        where: { userId },
-        select: { organisationUnitId: true },
-      }).then((r) => r.map((x) => x.organisationUnitId));
-      const unitIds = await getUnitIdsWithDescendants(myDirectUnitIds);
+      const unitIds = await getEffectiveUnitIds(userId);
       switch (view) {
         case 'a_traiter': {
           const orClauses: Record<string, unknown>[] = [{ assignedToId: userId }];

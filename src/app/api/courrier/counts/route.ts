@@ -39,6 +39,31 @@ async function getUnitIdsWithDescendants(unitIds: string[]): Promise<string[]> {
   return Array.from(result);
 }
 
+/** Périmètre utilisateur = unités d'affectation + unités où il est récipiendaire (avec descendants). */
+async function getEffectiveUnitIds(userId: string): Promise<string[]> {
+  const [memberUnitIds, recipiendaireRootIds] = await Promise.all([
+    prisma.userOrganisationUnit
+      .findMany({
+        where: { userId },
+        select: { organisationUnitId: true },
+      })
+      .then((r) => r.map((x) => x.organisationUnitId)),
+    prisma.organisationUnit
+      .findMany({
+        where: { recipiendaireId: userId, actif: true },
+        select: { id: true },
+      })
+      .then((r) => r.map((x) => x.id)),
+  ]);
+
+  const [memberPerimeter, recipiendairePerimeter] = await Promise.all([
+    getUnitIdsWithDescendants(memberUnitIds),
+    getUnitIdsWithDescendants(recipiendaireRootIds),
+  ]);
+
+  return Array.from(new Set([...memberPerimeter, ...recipiendairePerimeter]));
+}
+
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
@@ -47,13 +72,7 @@ export async function GET() {
       return apiSuccess(empty);
     }
 
-    const myDirectUnitIds = await prisma.userOrganisationUnit
-      .findMany({
-        where: { userId },
-        select: { organisationUnitId: true },
-      })
-      .then((r) => r.map((x) => x.organisationUnitId));
-    const unitIds = await getUnitIdsWithDescendants(myDirectUnitIds);
+    const unitIds = await getEffectiveUnitIds(userId);
 
     // Courriers que l'utilisateur a transférés (dernier transfert = lui) — exclus de « à traiter »
     const transfers = await prisma.courrierTransfert.findMany({
