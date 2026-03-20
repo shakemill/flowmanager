@@ -12,6 +12,7 @@ const FullLogo = () => {
         alt="Logo Communauté Urbaine de Bafoussam (C.U.B.)"
         width={200}
         height={240}
+        sizes="(max-width: 640px) 40vw, 120px"
         className="h-10 sm:h-11 w-auto max-w-[120px] object-contain object-left"
         priority
       />
