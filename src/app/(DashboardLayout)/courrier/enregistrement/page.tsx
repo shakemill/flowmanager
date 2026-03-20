@@ -52,6 +52,8 @@ interface Contact {
   adresse: string | null;
 }
 
+type RecipiendaireInfo = { id: string; email: string; name: string | null };
+
 interface OrganisationUnit {
   id: string;
   libelle: string;
@@ -59,6 +61,7 @@ interface OrganisationUnit {
   niveau: number;
   ordre: number;
   entiteTraitante?: boolean;
+  recipiendaire?: RecipiendaireInfo | null;
   children?: OrganisationUnit[];
 }
 
@@ -70,13 +73,42 @@ interface FilePreview {
   size: number;
 }
 
-function flattenUnits(units: OrganisationUnit[], level = 0): { id: string; libelle: string; level: number; entiteTraitante: boolean }[] {
-  const result: { id: string; libelle: string; level: number; entiteTraitante: boolean }[] = [];
+function flattenUnits(
+  units: OrganisationUnit[],
+  level = 0
+): {
+  id: string;
+  libelle: string;
+  level: number;
+  entiteTraitante: boolean;
+  recipiendaire: RecipiendaireInfo | null;
+}[] {
+  const result: {
+    id: string;
+    libelle: string;
+    level: number;
+    entiteTraitante: boolean;
+    recipiendaire: RecipiendaireInfo | null;
+  }[] = [];
   for (const u of units) {
-    result.push({ id: u.id, libelle: u.libelle, level, entiteTraitante: u.entiteTraitante !== false });
+    result.push({
+      id: u.id,
+      libelle: u.libelle,
+      level,
+      entiteTraitante: u.entiteTraitante !== false,
+      recipiendaire: u.recipiendaire ?? null,
+    });
     if (u.children?.length) result.push(...flattenUnits(u.children, level + 1));
   }
   return result;
+}
+
+function formatDestinataireLabel(r: RecipiendaireInfo | null): string | null {
+  if (!r) return null;
+  const name = r.name?.trim();
+  if (name) return name;
+  if (r.email?.trim()) return r.email.trim();
+  return null;
 }
 
 function canEnregistrer(session: { user?: { role?: string; roles?: string[] } } | null): boolean {
@@ -198,6 +230,10 @@ export default function EnregistrementCourrierPage() {
   }, []);
 
   const unitsFlat = flattenUnits(organisationTree).filter((u) => u.entiteTraitante);
+  const selectedTraitanteUnit = entiteTraitanteId ? unitsFlat.find((u) => u.id === entiteTraitanteId) : undefined;
+  const destinataireCourrierLabel = selectedTraitanteUnit
+    ? formatDestinataireLabel(selectedTraitanteUnit.recipiendaire)
+    : null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
@@ -593,6 +629,20 @@ export default function EnregistrementCourrierPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {entiteTraitanteId ? (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {destinataireCourrierLabel ? (
+                      <>
+                        Destinataire du courrier (récipiendaire) :{' '}
+                        <span className="font-medium text-foreground">{destinataireCourrierLabel}</span>
+                      </>
+                    ) : (
+                      <span className="italic">
+                        Aucun récipiendaire n&apos;est défini pour cette entité dans l&apos;organigramme.
+                      </span>
+                    )}
+                  </p>
+                ) : null}
               </div>
               <div>
                 <Label>Document principal et pièces jointes</Label>
