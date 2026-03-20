@@ -209,6 +209,12 @@ export default function CourrierDetailPage() {
     return libelles.length > 0 ? libelles.join(', ') : u.email;
   };
 
+  const refreshBannettesCounts = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('courrier-counts-refresh'));
+    }
+  };
+
   const loadVisaDemandes = () => {
     fetch(`/api/courrier/${id}/visa-demande`).then((r) => r.json()).then((data) => {
       if (!data.error) setVisaDemandes(Array.isArray(data) ? data : []);
@@ -304,6 +310,7 @@ export default function CourrierDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Erreur');
       toast.success('Circuit démarré');
+      refreshBannettesCounts();
       const refetch = await fetch(`/api/courrier/${id}/workflow`);
       const wData = await refetch.json();
       setWorkflow(wData?.id ? wData : null);
@@ -324,6 +331,7 @@ export default function CourrierDetailPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? 'Erreur');
         toast.success(visaAction === 'VISE' ? 'Avis envoyé (visé)' : 'Avis refusé');
+        refreshBannettesCounts();
         setVisaOpen(false);
         setVisaDemandeResponseId(null);
         setCommentaire('');
@@ -343,6 +351,7 @@ export default function CourrierDetailPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? 'Erreur');
         toast.success(visaAction === 'VISE' ? 'Courrier visé' : 'Visa refusé');
+        refreshBannettesCounts();
         setVisaOpen(false);
         setCommentaire('');
         fetch(`/api/courrier/${id}`).then((r) => r.json()).then(setCourrier);
@@ -375,6 +384,7 @@ export default function CourrierDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Erreur');
       toast.success('Courrier transféré');
+      refreshBannettesCounts();
       setTransferToUnitOpen(false);
       setTransferToPersonOpen(false);
       setTransferToUnitId('');
@@ -404,6 +414,7 @@ export default function CourrierDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Erreur');
       toast.success('Demande(s) de visa envoyée(s)');
+      refreshBannettesCounts();
       setVisaDemandeOpen(false);
       setVisaDemandeUserIds([]);
       setVisaDemandeNote('');
@@ -435,6 +446,7 @@ export default function CourrierDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Erreur');
       toast.success('Envoi à l\'éparapheur effectué');
+      refreshBannettesCounts();
       setEparapheurOpen(false);
       setEparapheurInclurePrincipal(false);
       setEparapheurPieceIds([]);
@@ -644,6 +656,7 @@ export default function CourrierDetailPage() {
                         const data = await res.json();
                         if (data.error) throw new Error(data.error);
                         toast.success('Accusé de réception envoyé par WhatsApp.');
+                        refreshBannettesCounts();
                       } catch (err) {
                         toast.error(err instanceof Error ? err.message : 'Erreur lors de l\'envoi WhatsApp.');
                       } finally {
@@ -745,6 +758,7 @@ export default function CourrierDetailPage() {
                     });
                   }
                   toast.success('Projet de réponse ajouté.');
+                  refreshBannettesCounts();
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : 'Erreur lors de l\'upload.');
                 } finally {
@@ -929,6 +943,7 @@ export default function CourrierDetailPage() {
                     if (data.error) throw new Error(data.error);
                     setAccuseDialogOpen(false);
                     toast.success(data.emailSent ? 'Accusé de réception envoyé par mail.' : 'Accusé de réception enregistré (envoi mail non configuré).');
+                    refreshBannettesCounts();
                   } catch (e) {
                     toast.error(e instanceof Error ? e.message : 'Erreur lors de l\'envoi.');
                   } finally {
@@ -975,6 +990,7 @@ export default function CourrierDetailPage() {
             setToDeletePiece(null);
             setPreviewPiece(null);
             toast.success('Pièce jointe supprimée.');
+            refreshBannettesCounts();
           }}
         />
 

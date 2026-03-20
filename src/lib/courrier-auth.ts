@@ -43,24 +43,13 @@ export async function canActOnCourrier(courrierId: string, userId: string): Prom
     return true;
   }
 
-  const recipiendaireId = await prisma.organisationUnit.findUnique({
+  const recipiendaire = await prisma.organisationUnit.findUnique({
     where: { id: courrier.entiteTraitanteId ?? '' },
     select: { recipiendaireId: true },
   });
-  if (
-    recipiendaireId?.recipiendaireId !== null
-    && String(recipiendaireId?.recipiendaireId).trim() === String(userId).trim()
-  ) {
-    return true;
-  }
-
-  const myDirectUnitIds = await prisma.userOrganisationUnit
-    .findMany({
-      where: { userId },
-      select: { organisationUnitId: true },
-    })
-    .then((r) => r.map((x) => x.organisationUnitId));
-  const unitIds = await getUnitIdsWithDescendants(myDirectUnitIds);
+  const isRecipiendaire =
+    recipiendaire?.recipiendaireId !== null
+    && String(recipiendaire?.recipiendaireId).trim() === String(userId).trim();
 
   const lastTransfer = await prisma.courrierTransfert.findFirst({
     where: { courrierId },
@@ -71,11 +60,8 @@ export async function canActOnCourrier(courrierId: string, userId: string): Prom
     return false;
   }
 
-  const statutOk = courrier.statut === 'ENREGISTRE' || courrier.statut === 'EN_TRAITEMENT';
-  const assignedOk = courrier.assignedToId === null || String(courrier.assignedToId).trim() === String(userId).trim();
-  const unitOk = courrier.entiteTraitanteId !== null && unitIds.includes(courrier.entiteTraitanteId);
-
-  return unitOk && statutOk && assignedOk;
+  const statutATraiter = courrier.statut === 'ENREGISTRE' || courrier.statut === 'EN_TRAITEMENT';
+  return isRecipiendaire && statutATraiter;
 }
 
 /**

@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes'
 import { useSession } from 'next-auth/react'
 import { APP_LOGO_SRC } from '@/lib/constants'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import SidebarContent, { type ChildItem } from './Sidebaritems'
 import SimpleBar from 'simplebar-react'
 import { Icon } from '@iconify/react'
@@ -32,7 +32,7 @@ function BanettesSubmenu({
   onClose?: () => void
 }) {
   const [counts, setCounts] = useState<Record<string, number>>({})
-  const loadCounts = () => {
+  const loadCounts = useCallback(() => {
     fetch('/api/courrier/counts', { credentials: 'include', cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
@@ -43,12 +43,27 @@ function BanettesSubmenu({
         }
       })
       .catch(() => {})
-  }
+  }, [])
   useEffect(() => {
     loadCounts()
     const t = setTimeout(loadCounts, 800)
-    return () => clearTimeout(t)
-  }, [])
+    const intervalId = setInterval(loadCounts, 5000)
+    const onFocus = () => loadCounts()
+    const onVisibility = () => {
+      if (!document.hidden) loadCounts()
+    }
+    const onManualRefresh = () => loadCounts()
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('courrier-counts-refresh', onManualRefresh)
+    return () => {
+      clearTimeout(t)
+      clearInterval(intervalId)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('courrier-counts-refresh', onManualRefresh)
+    }
+  }, [loadCounts])
   const IconComp = item.icon || 'solar:inbox-linear'
   const iconElement = <Icon icon={IconComp} height={21} width={21} />
   return (
