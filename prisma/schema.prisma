@@ -99,8 +99,6 @@ model OrganisationUnit {
   userOrganisationUnits UserOrganisationUnit[]
   etapeWorkflows EtapeWorkflow[]
   transfertsRecus CourrierTransfert[]
-
-  @@index([recipiendaireId])
 }
 
 // --- Typologie courrier (2 niveaux) ---
@@ -152,7 +150,7 @@ model Courrier {
   transferts        CourrierTransfert[]
   eparapheurEnvois EparapheurEnvoi[]
 
-  @@index([entiteTraitanteId])
+  /** dateArrivee seul + composite avec entiteTraitanteId (l'index FK couvre déjà entiteTraitanteId seul). */
   @@index([dateArrivee])
   @@index([entiteTraitanteId, dateArrivee])
 }
