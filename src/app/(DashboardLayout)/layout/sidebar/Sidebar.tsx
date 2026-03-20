@@ -190,15 +190,15 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
       <aside
         className='fixed left-0 top-0 border-none bg-background z-10 h-screen w-[270px] flex flex-col'
         aria-label='Sidebar'>
-        <div className='flex w-full min-h-16 items-center justify-center px-3 py-3 brand-logo overflow-hidden border-b border-border/40'>
+        <div className='flex w-full min-h-[4.25rem] items-center justify-center px-3 py-3 brand-logo overflow-hidden border-b border-border/40'>
           <Image
             src={APP_LOGO_SRC}
             alt='Logo C.U.B.'
             width={200}
             height={240}
             priority
-            sizes='(max-width: 768px) 60vw, 180px'
-            className='h-12 w-auto max-w-[min(100%,11.25rem)] object-contain object-center'
+            sizes='(max-width: 768px) 60vw, 200px'
+            className='h-14 w-auto max-w-[min(100%,13rem)] object-contain object-center'
           />
         </div>
         <div className='flex-1 min-h-0' />
@@ -216,7 +216,7 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
       mode={sidebarMode}
       className='fixed left-0 top-0 border-none bg-background z-10 h-screen'>
       {/* Logo — centré ; APP_LOGO_SRC utilise BASE_PATH pour déploiement sous-chemin */}
-      <div className='flex w-full min-h-16 shrink-0 items-center justify-center px-3 py-3 brand-logo overflow-hidden border-b border-border/40'>
+      <div className='flex w-full min-h-[4.25rem] shrink-0 items-center justify-center px-3 py-3 brand-logo overflow-hidden border-b border-border/40'>
         <AMLogo component={Link} href='/' img=''>
           <span className='flex w-full justify-center'>
             <Image
@@ -225,8 +225,8 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
               width={200}
               height={240}
               priority
-              sizes='(max-width: 768px) 60vw, 180px'
-              className='h-12 w-auto max-w-[min(100%,11.25rem)] object-contain object-center'
+              sizes='(max-width: 768px) 60vw, 200px'
+              className='h-14 w-auto max-w-[min(100%,13rem)] object-contain object-center'
             />
           </span>
         </AMLogo>

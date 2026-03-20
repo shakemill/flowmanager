@@ -12,7 +12,8 @@ const Logo = () => {
         alt="Logo C.U.B."
         width={200}
         height={240}
-        className="h-9 w-auto max-w-[88px] object-contain object-left"
+        className="h-11 w-auto max-w-[110px] object-contain object-left"
+        sizes="110px"
         priority
       />
     </Link>
