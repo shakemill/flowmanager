@@ -4,13 +4,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useTheme } from 'next-themes'
 import { useSession } from 'next-auth/react'
-import { BASE_PATH } from '@/lib/constants'
+import { APP_LOGO_SRC } from '@/lib/constants'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import SidebarContent from './Sidebaritems'
 import SimpleBar from 'simplebar-react'
 import { Icon } from '@iconify/react'
-import FullLogo from '../shared/logo/FullLogo'
 import { Button } from '@/components/ui/button'
 import {
   AMLogo,
@@ -193,11 +192,11 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
         aria-label='Sidebar'>
         <div className='px-4 flex items-center brand-logo overflow-hidden h-16'>
           <Image
-            src={`${BASE_PATH}/images/logos/dark-logo.svg`}
-            alt='logo'
-            width={135}
-            height={40}
-            className='rtl:scale-x-[-1]'
+            src={APP_LOGO_SRC}
+            alt='Logo C.U.B.'
+            width={200}
+            height={240}
+            className='h-12 w-auto max-w-[140px] object-contain object-left rtl:scale-x-[-1]'
           />
         </div>
         <div className='flex-1 min-h-0' />
@@ -217,13 +216,12 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
       {/* Logo */}
       <div className='px-4 flex items-center brand-logo overflow-hidden'>
         <AMLogo component={Link} href='/' img=''>
-          {/* <FullLogo /> */}
           <Image
-            src={`${BASE_PATH}/images/logos/dark-logo.svg`}
-            alt="logo"
-            width={135}
-            height={40}
-            className="rtl:scale-x-[-1]"
+            src={APP_LOGO_SRC}
+            alt="Logo C.U.B."
+            width={200}
+            height={240}
+            className="h-12 w-auto max-w-[140px] object-contain object-left rtl:scale-x-[-1]"
           />
         </AMLogo>
       </div>

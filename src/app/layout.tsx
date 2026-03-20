@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   title: 'FlowManager',
   description: 'Gestion du courrier',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/images/logos/cub-logo.png',
+    apple: '/images/logos/cub-logo.png',
   },
 }
 
@@ -23,7 +24,8 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning>
       <head>
-        <link rel='icon' href='/favicon.svg' type='image/svg+xml' />
+        <link rel='icon' href='/images/logos/cub-logo.png' type='image/png' sizes='any' />
+        <link rel='apple-touch-icon' href='/images/logos/cub-logo.png' />
         <link rel='manifest' href='/manifest.json' />
         {/* {typeof window !== 'undefined' && <ThemeModeScript />} */}
       </head>

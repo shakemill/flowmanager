@@ -1,13 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-/**
- * Page de secours si une redirection pointe encore vers /error.
- * Redirige vers la page de login (avec le paramètre error conservé).
- */
-export default function ErrorPage() {
+function ErrorRedirectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -25,5 +21,22 @@ export default function ErrorPage() {
     <div className="flex min-h-screen items-center justify-center text-muted-foreground">
       Redirection vers la page de connexion...
     </div>
+  );
+}
+
+/**
+ * Page de secours si une redirection pointe encore vers /error.
+ * Redirige vers la page de login (avec le paramètre error conservé).
+ */
+export default function ErrorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+          Chargement...
+        </div>
+      }>
+      <ErrorRedirectContent />
+    </Suspense>
   );
 }
