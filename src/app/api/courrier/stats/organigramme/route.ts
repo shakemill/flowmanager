@@ -37,6 +37,19 @@ function parsePeriod(searchParams: URLSearchParams): { dateFrom: Date; dateTo: D
   return { dateFrom, dateTo };
 }
 
+/** Séparateur cohérent avec `buildUnitPathMap` (libellés d’ancêtres › entité courante). */
+const HIERARCHY_SEP = ' › ';
+
+/** Affiche au plus les `maxLevels` derniers niveaux (ex. parent + service). */
+function hierarchyPathLastNLevels(fullPath: string, maxLevels: number): string {
+  const parts = fullPath
+    .split(HIERARCHY_SEP)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length <= maxLevels) return fullPath.trim();
+  return parts.slice(-maxLevels).join(HIERARCHY_SEP);
+}
+
 function buildUnitPathMap(
   units: { id: string; libelle: string; parentId: string | null }[]
 ): Map<string, string> {
@@ -50,7 +63,7 @@ function buildUnitPathMap(
       pathCache.set(id, id);
       return id;
     }
-    const p = u.parentId ? `${pathOf(u.parentId)} › ${u.libelle}` : u.libelle;
+    const p = u.parentId ? `${pathOf(u.parentId)}${HIERARCHY_SEP}${u.libelle}` : u.libelle;
     pathCache.set(id, p);
     return p;
   }
@@ -187,7 +200,14 @@ export async function GET(request: NextRequest) {
       }),
       prisma.organisationUnit.findMany({
         where: { actif: true },
-        select: { id: true, libelle: true, parentId: true },
+        select: {
+          id: true,
+          libelle: true,
+          parentId: true,
+          niveau: true,
+          ordre: true,
+          entiteTraitante: true,
+        },
       }),
       prisma.$queryRawUnsafe<Array<{ bucket: string; cnt: bigint }>>(
         `SELECT DATE_FORMAT(dateArrivee, '%Y-%m') AS bucket, COUNT(*) AS cnt
@@ -224,15 +244,43 @@ export async function GET(request: NextRequest) {
 
     const pathMap = buildUnitPathMap(allUnitsForPath);
     const unitLabel = new Map(allUnitsForPath.map((u) => [u.id, u.libelle]));
+    const unitMeta = new Map(
+      allUnitsForPath.map((u) => [
+        u.id,
+        {
+          parentId: u.parentId,
+          niveau: u.niveau,
+          ordre: u.ordre,
+          entiteTraitante: u.entiteTraitante,
+        },
+      ])
+    );
 
-    const parEntiteEnriched = parEntite
-      .map((row) => ({
-        unitId: row.entiteTraitanteId,
-        libelle: unitLabel.get(row.entiteTraitanteId) ?? row.entiteTraitanteId,
-        path: pathMap.get(row.entiteTraitanteId) ?? unitLabel.get(row.entiteTraitanteId) ?? row.entiteTraitanteId,
-        count: row._count.id,
-      }))
-      .sort((a, b) => b.count - a.count);
+    /** Volume par entité (seules les unités avec au moins un courrier sortent du groupBy). */
+    const countByEntite = new Map(
+      parEntite.map((row) => [row.entiteTraitanteId, row._count.id])
+    );
+
+    /** Toutes les sous-unités du périmètre (récipiendaire : arbre sous les racines ; admin : toutes les unités actives), y compris à 0 courrier. */
+    const parEntiteEnriched = [...new Set(perimeter)]
+      .map((unitId) => {
+        const fullPath = pathMap.get(unitId) ?? unitLabel.get(unitId) ?? unitId;
+        const meta = unitMeta.get(unitId);
+        return {
+          unitId,
+          libelle: unitLabel.get(unitId) ?? unitId,
+          parentId: meta?.parentId ?? null,
+          niveau: meta?.niveau ?? 0,
+          ordre: meta?.ordre ?? 0,
+          entiteTraitante: meta?.entiteTraitante ?? true,
+          path: hierarchyPathLastNLevels(fullPath, 2),
+          pathFull: fullPath,
+          count: countByEntite.get(unitId) ?? 0,
+        };
+      })
+      // Ordre d’affichage « organigramme » géré côté client (tri par parent / ordre) ;
+      // liste plate triée par libellé pour une réponse stable.
+      .sort((a, b) => a.libelle.localeCompare(b.libelle, 'fr', { sensitivity: 'base' }));
 
     const typologieIds = typologieGroups.map((g) => g.typologieId).filter((id): id is string => id != null);
     const typologies =
