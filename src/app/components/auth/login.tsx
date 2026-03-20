@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import FullLogo from '@/app/(DashboardLayout)/layout/shared/logo/FullLogo'
 import CardBox from '../shared/CardBox'
 import Link from 'next/link'
@@ -18,7 +18,6 @@ const ERROR_MESSAGES: Record<string, string> = {
 }
 
 export const Login = () => {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') ?? '/'
   const errorParam = searchParams.get('error')
@@ -59,8 +58,7 @@ export const Login = () => {
         return
       }
       toast.success('Connexion réussie')
-      router.push(callbackUrl)
-      router.refresh()
+      window.location.href = callbackUrl
     } catch {
       toast.error('Erreur de connexion')
     } finally {
