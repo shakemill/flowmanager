@@ -172,7 +172,7 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { theme } = useTheme()
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const isAdmin = (session?.user as { role?: string } | undefined)?.role === 'admin'
   const [mounted, setMounted] = useState(false)
   const [canViewOrganigrammeStats, setCanViewOrganigrammeStats] = useState(false)
@@ -182,15 +182,28 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
   }, [])
 
   useEffect(() => {
-    fetch('/api/me')
+    if (sessionStatus !== 'authenticated') {
+      if (sessionStatus === 'unauthenticated') setCanViewOrganigrammeStats(false)
+      return
+    }
+    let cancelled = false
+    fetch('/api/me', { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return
         if (data && !data.error && data.canViewOrganigrammeStats === true) {
           setCanViewOrganigrammeStats(true)
+        } else {
+          setCanViewOrganigrammeStats(false)
         }
       })
-      .catch(() => {})
-  }, [])
+      .catch(() => {
+        if (!cancelled) setCanViewOrganigrammeStats(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [sessionStatus])
 
   // Only allow "light" or "dark" for AMSidebar
   const sidebarMode = theme === 'light' || theme === 'dark' ? theme : undefined

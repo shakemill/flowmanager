@@ -176,8 +176,24 @@ export function buildOrganigrammeCourrierWhere(
   return { AND: and };
 }
 
-/** True si l'utilisateur peut accéder aux statistiques périmètre (au moins une unité en récipiendaire). */
+/**
+ * True si l'utilisateur voit le lien « Statistiques périmètre » :
+ * administrateur application, ou récipiendaire sur au moins une unité de l'organigramme.
+ */
 export async function canViewOrganigrammeStats(userId: string): Promise<boolean> {
-  const roots = await getRecipiendaireRootUnitIds(userId);
-  return roots.length > 0;
+  const [roots, user] = await Promise.all([
+    getRecipiendaireRootUnitIds(userId),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+  ]);
+  if (roots.length > 0) return true;
+  return user?.role === 'admin';
+}
+
+/** Toutes les unités organisationnelles actives (vue admin stats globale). */
+export async function getAllActiveOrganisationUnitIds(): Promise<string[]> {
+  const rows = await prisma.organisationUnit.findMany({
+    where: { actif: true },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
 }

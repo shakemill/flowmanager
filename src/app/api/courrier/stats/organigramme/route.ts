@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { apiError, apiSuccess, getCurrentUserId } from '@/lib/api-utils';
 import {
   buildOrganigrammeCourrierWhere,
+  getAllActiveOrganisationUnitIds,
   getRecipiendairePerimeterUnitIds,
   getRecipiendaireRootUnitIds,
 } from '@/lib/courrier-auth';
@@ -62,19 +63,38 @@ export async function GET(request: NextRequest) {
     const userId = await getCurrentUserId();
     if (!userId) return apiError('Non autorisé', 401, 'UNAUTHORIZED');
 
-    const perimeter = await getRecipiendairePerimeterUnitIds(userId);
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    const isAdmin = dbUser?.role === 'admin';
+
+    let perimeter: string[];
+    let rootIds: string[];
+    let statsScope: 'admin' | 'recipiendaire' = 'recipiendaire';
+
+    if (isAdmin) {
+      statsScope = 'admin';
+      perimeter = await getAllActiveOrganisationUnitIds();
+      rootIds = [];
+    } else {
+      perimeter = await getRecipiendairePerimeterUnitIds(userId);
+      if (perimeter.length === 0) {
+        return apiError(
+          'Accès réservé aux administrateurs ou aux responsables désignés comme récipiendaire sur au moins une unité de l’organigramme.',
+          403,
+          'FORBIDDEN'
+        );
+      }
+      rootIds = await getRecipiendaireRootUnitIds(userId);
+    }
+
     if (perimeter.length === 0) {
-      return apiError(
-        'Accès réservé aux responsables désignés comme récipiendaire sur au moins une unité de l’organigramme.',
-        403,
-        'FORBIDDEN'
-      );
+      return apiError('Aucune unité active dans l’organigramme.', 400, 'BAD_REQUEST');
     }
 
     const { dateFrom, dateTo } = parsePeriod(new URL(request.url).searchParams);
     const courrierWhere = buildOrganigrammeCourrierWhere(perimeter, { dateFrom, dateTo });
-
-    const rootIds = await getRecipiendaireRootUnitIds(userId);
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -316,6 +336,7 @@ export async function GET(request: NextRequest) {
       perimeter: {
         rootUnitIds: rootIds,
         unitCount: perimeter.length,
+        scope: statsScope,
       },
       totals: {
         total,

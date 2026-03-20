@@ -51,7 +51,7 @@ const VISA_STATUT_LABELS: Record<string, string> = {
 
 type OrganigrammeStats = {
   period: { from: string; to: string };
-  perimeter: { rootUnitIds: string[]; unitCount: number };
+  perimeter: { rootUnitIds: string[]; unitCount: number; scope?: 'admin' | 'recipiendaire' };
   totals: { total: number; courriersAujourdhui: number; assigned: number; unassigned: number };
   parStatut: Record<string, number>;
   parPriorite: Record<string, number>;
@@ -138,13 +138,12 @@ export default function StatistiquesOrganigrammePage() {
           <Icon icon="solar:shield-warning-linear" className="size-12 mx-auto text-amber-500 mb-4" />
           <h1 className="text-lg font-semibold mb-2">Accès réservé</h1>
           <p className="text-sm text-muted-foreground">
-            Cette page est réservée aux responsables désignés comme{' '}
-            <strong>récipiendaire</strong> sur au moins une unité de l&apos;organigramme. Contactez un
-            administrateur pour vous affecter sur une entité dans{' '}
+            Réservé aux <strong>administrateurs</strong> de l&apos;application ou aux utilisateurs
+            désignés comme <strong>récipiendaire</strong> sur au moins une unité dans{' '}
             <Link href="/courrier/organigramme" className="text-primary underline">
               Organigramme
-            </Link>
-            .
+            </Link>{' '}
+            (fiche de l&apos;unité : « Récipiendaire du courrier »).
           </p>
         </CardBox>
       </>
@@ -156,8 +155,9 @@ export default function StatistiquesOrganigrammePage() {
       <BreadcrumbComp title="Statistiques périmètre" items={BCrumb} />
       <div className="mt-4 space-y-2 max-w-[1600px]">
         <p className="text-sm text-muted-foreground">
-          Indicateurs sur le courrier des entités dont vous êtes le récipiendaire (et leurs services
-          rattachés), filtré par <strong>date d&apos;arrivée</strong>.
+          <strong>Admin</strong> : vue sur toutes les unités actives.{' '}
+          <strong>Récipiendaire</strong> : unités dont vous êtes responsable dans l&apos;organigramme
+          (et descendants). Filtre sur la <strong>date d&apos;arrivée</strong>.
         </p>
         <CardBox className="p-4 flex flex-wrap items-end gap-4">
           <div>
