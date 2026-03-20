@@ -77,6 +77,8 @@ export async function GET(request: NextRequest) {
       switch (view) {
         case 'a_traiter': {
           const orClauses: Record<string, unknown>[] = [{ assignedToId: userId }];
+          // Le récipiendaire de l'entité traitante doit voir son courrier à traiter
+          orClauses.push({ entiteTraitante: { recipiendaireId: userId } });
           if (unitIds.length) {
             orClauses.push({
               entiteTraitanteId: { in: unitIds },

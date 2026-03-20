@@ -43,6 +43,17 @@ export async function canActOnCourrier(courrierId: string, userId: string): Prom
     return true;
   }
 
+  const recipiendaireId = await prisma.organisationUnit.findUnique({
+    where: { id: courrier.entiteTraitanteId ?? '' },
+    select: { recipiendaireId: true },
+  });
+  if (
+    recipiendaireId?.recipiendaireId !== null
+    && String(recipiendaireId?.recipiendaireId).trim() === String(userId).trim()
+  ) {
+    return true;
+  }
+
   const myDirectUnitIds = await prisma.userOrganisationUnit
     .findMany({
       where: { userId },
