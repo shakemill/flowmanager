@@ -80,7 +80,7 @@ export const Login = () => {
         <div className='absolute inset-0 bg-white/60' aria-hidden />
         <div className='relative z-10 md:min-w-[450px] min-w-max mx-4'>
           <CardBox className='shadow-xl'>
-            <div className='flex justify-center mb-4'>
+            <div className='flex justify-center mb-1'>
               <FullLogo />
             </div>
             <p className='text-sm text-charcoal text-center mb-6'>
