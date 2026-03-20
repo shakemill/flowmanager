@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/lib/toast'
+import { Icon } from '@iconify/react'
 
 const ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin: 'Email ou mot de passe incorrect',
@@ -23,6 +24,7 @@ export const Login = () => {
   const errorParam = searchParams.get('error')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
   const errorShownRef = useRef(false)
@@ -108,14 +110,25 @@ export const Login = () => {
                     Mot de passe
                   </Label>
                 </div>
-                <Input
-                  id='password'
-                  type='password'
-                  placeholder='Mot de passe'
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className='relative'>
+                  <Input
+                    id='password'
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder='Mot de passe'
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className='pr-10'
+                    required
+                  />
+                  <button
+                    type='button'
+                    onClick={() => setShowPassword((v) => !v)}
+                    className='absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
+                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    <Icon icon={showPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} className='size-5' />
+                  </button>
+                </div>
               </div>
               <div className='flex flex-wrap gap-6 items-center justify-between mt-4'>
                 <div className='flex items-center gap-2'>

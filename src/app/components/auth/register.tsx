@@ -1,13 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import FullLogo from '@/app/(DashboardLayout)/layout/shared/logo/FullLogo'
 import CardBox from '../shared/CardBox'
 import Link from 'next/link'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Icon } from '@iconify/react'
 
 export const Register = () => {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <>
       <div className='h-screen w-full flex justify-center items-center bg-lightprimary'>
@@ -51,12 +55,23 @@ export const Register = () => {
                   Password
                 </Label>
               </div>
-              <Input
-                id='password1'
-                type='password'
-                placeholder='Enter your password'
-                required
-              />
+              <div className='relative'>
+                <Input
+                  id='password1'
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder='Enter your password'
+                  className='pr-10'
+                  required
+                />
+                <button
+                  type='button'
+                  onClick={() => setShowPassword((v) => !v)}
+                  className='absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground'
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <Icon icon={showPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} className='size-5' />
+                </button>
+              </div>
             </div>
             <Button className='w-full' asChild>
               <Link href='/'>Sign Up</Link>

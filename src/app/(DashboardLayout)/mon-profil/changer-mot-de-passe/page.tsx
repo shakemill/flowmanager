@@ -24,6 +24,9 @@ export default function ChangerMotDePassePage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,39 +118,69 @@ export default function ChangerMotDePassePage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="••••••••"
-                className="mt-1.5"
-              />
+              <div className="relative mt-1.5">
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showCurrentPassword ? 'Masquer le mot de passe actuel' : 'Afficher le mot de passe actuel'}
+                >
+                  <Icon icon={showCurrentPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} className="size-5" />
+                </button>
+              </div>
             </div>
             <div>
               <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={`Au moins ${MIN_PASSWORD_LENGTH} caractères`}
-                className="mt-1.5"
-              />
+              <div className="relative mt-1.5">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder={`Au moins ${MIN_PASSWORD_LENGTH} caractères`}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showNewPassword ? 'Masquer le nouveau mot de passe' : 'Afficher le nouveau mot de passe'}
+                >
+                  <Icon icon={showNewPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} className="size-5" />
+                </button>
+              </div>
             </div>
             <div>
               <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className="mt-1.5"
-              />
+              <div className="relative mt-1.5">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showConfirmPassword ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'}
+                >
+                  <Icon icon={showConfirmPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} className="size-5" />
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Button type="submit" disabled={loading}>

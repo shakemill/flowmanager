@@ -37,6 +37,7 @@ const Page = () => {
   const [switch1, setSwitch1] = useState(false);
   const [switch2, setSwitch2] = useState(true);
   const [switch3, setSwitch3] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [open, setOpen] = React.useState(false)
   const [date, setDate] = React.useState<Date | undefined>(undefined)
@@ -97,13 +98,23 @@ const Page = () => {
               {/* Password */}
               <div>
                 <Label htmlFor="password">Password Input</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your Password"
-                  required
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your Password"
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <Icon icon={showPassword ? "solar:eye-closed-linear" : "solar:eye-linear"} width={18} height={18} />
+                  </button>
+                </div>
               </div>
 
               {/* Datepicker */}

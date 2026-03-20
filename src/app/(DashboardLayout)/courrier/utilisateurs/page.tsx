@@ -132,6 +132,7 @@ export default function GestionUtilisateursPage() {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+  const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [newUserRole, setNewUserRole] = useState<'user' | 'admin'>('user');
   const [creatingUser, setCreatingUser] = useState(false);
   const [editUserOpen, setEditUserOpen] = useState(false);
@@ -140,6 +141,7 @@ export default function GestionUtilisateursPage() {
   const [editName, setEditName] = useState('');
   const [editRole, setEditRole] = useState<'user' | 'admin'>('user');
   const [editPassword, setEditPassword] = useState('');
+  const [showEditPassword, setShowEditPassword] = useState(false);
   const [updatingUser, setUpdatingUser] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<RoleOption[]>([]);
   const [newUserRoleCodes, setNewUserRoleCodes] = useState<string[]>([]);
@@ -698,7 +700,7 @@ export default function GestionUtilisateursPage() {
       </Dialog>
 
       {/* Dialog Ajouter un utilisateur */}
-      <Dialog open={addUserOpen} onOpenChange={(open) => { setAddUserOpen(open); if (!open) { setNewUserEmail(''); setNewUserName(''); setNewUserPassword(''); setNewUserRole('user'); } }}>
+      <Dialog open={addUserOpen} onOpenChange={(open) => { setAddUserOpen(open); if (!open) { setNewUserEmail(''); setNewUserName(''); setNewUserPassword(''); setNewUserRole('user'); setShowNewUserPassword(false); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-3">
@@ -736,14 +738,24 @@ export default function GestionUtilisateursPage() {
             </div>
             <div>
               <Label className="text-xs font-medium">Mot de passe</Label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={newUserPassword}
-                onChange={(e) => setNewUserPassword(e.target.value)}
-                className="mt-1.5"
-                autoComplete="new-password"
-              />
+              <div className="relative mt-1.5">
+                <Input
+                  type={showNewUserPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
+                  className="pr-10"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewUserPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showNewUserPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  <Icon icon={showNewUserPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} className="size-5" />
+                </button>
+              </div>
             </div>
             <div>
               <Label className="text-xs font-medium">Rôle principal</Label>
@@ -795,6 +807,7 @@ export default function GestionUtilisateursPage() {
           if (!open) {
             setEditUser(null);
             setEditPassword('');
+            setShowEditPassword(false);
           }
         }}
       >
@@ -837,14 +850,24 @@ export default function GestionUtilisateursPage() {
             </div>
             <div>
               <Label className="text-xs font-medium">Nouveau mot de passe (optionnel)</Label>
-              <Input
-                type="password"
-                placeholder="Laisser vide pour ne pas changer"
-                value={editPassword}
-                onChange={(e) => setEditPassword(e.target.value)}
-                className="mt-1.5"
-                autoComplete="new-password"
-              />
+              <div className="relative mt-1.5">
+                <Input
+                  type={showEditPassword ? 'text' : 'password'}
+                  placeholder="Laisser vide pour ne pas changer"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="pr-10"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEditPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showEditPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  <Icon icon={showEditPassword ? 'solar:eye-closed-linear' : 'solar:eye-linear'} className="size-5" />
+                </button>
+              </div>
             </div>
             <div>
               <Label className="text-xs font-medium">Rôle principal</Label>
