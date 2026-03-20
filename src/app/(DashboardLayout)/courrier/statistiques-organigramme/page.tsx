@@ -525,32 +525,36 @@ export default function StatistiquesOrganigrammePage() {
         {/* Filtres */}
         <CardBox className="p-5 sm:p-6 rounded-2xl border-border/70 shadow-sm bg-card/50 backdrop-blur-sm">
           <div className="flex flex-col xl:flex-row xl:items-end gap-6">
-            <div className="flex flex-wrap items-end gap-4 flex-1">
-              <div className="space-y-2">
-                <Label htmlFor="stats-from" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Du
-                </Label>
-                <Input
-                  id="stats-from"
-                  type="date"
-                  className="w-40 rounded-lg border-border/80 h-10"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="stats-to" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Au
-                </Label>
-                <Input
-                  id="stats-to"
-                  type="date"
-                  className="w-40 rounded-lg border-border/80 h-10"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                />
-              </div>
-              <Button type="button" onClick={load} disabled={loading} className="h-10 rounded-lg gap-2">
+            <div className="flex flex-nowrap items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch]">
+              <Label
+                htmlFor="stats-from"
+                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
+                Du
+              </Label>
+              <Input
+                id="stats-from"
+                type="date"
+                className="w-[9.5rem] sm:w-40 shrink-0 rounded-lg border-border/80 h-10"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+              />
+              <Label
+                htmlFor="stats-to"
+                className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
+                Au
+              </Label>
+              <Input
+                id="stats-to"
+                type="date"
+                className="w-[9.5rem] sm:w-40 shrink-0 rounded-lg border-border/80 h-10"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+              />
+              <Button
+                type="button"
+                onClick={load}
+                disabled={loading}
+                className="h-10 rounded-lg gap-2 shrink-0">
                 <Icon
                   icon={loading ? 'solar:refresh-linear' : 'solar:refresh-bold'}
                   className={cn('size-4', loading && 'animate-spin')}
@@ -581,13 +585,18 @@ export default function StatistiquesOrganigrammePage() {
               </div>
             </div>
             {stats ? (
-              <div className="xl:text-right text-sm text-muted-foreground xl:border-l xl:border-border/60 xl:pl-6 xl:min-w-[200px]">
-                <p className="font-medium text-foreground">
-                  {stats.perimeter.unitCount} unité{stats.perimeter.unitCount > 1 ? 's' : ''}
-                </p>
-                <p className="text-xs mt-1">
-                  {format(new Date(stats.period.from), 'd MMM yyyy', { locale: fr })} —{' '}
-                  {format(new Date(stats.period.to), 'd MMM yyyy', { locale: fr })}
+              <div className="text-sm text-muted-foreground xl:text-right xl:border-l xl:border-border/60 xl:pl-6 xl:min-w-[220px] shrink-0 max-w-full overflow-x-auto [-webkit-overflow-scrolling:touch]">
+                <p className="whitespace-nowrap min-w-0">
+                  <span className="font-medium text-foreground">
+                    {stats.perimeter.unitCount} unité{stats.perimeter.unitCount > 1 ? 's' : ''}
+                  </span>
+                  <span className="mx-2 text-border" aria-hidden>
+                    ·
+                  </span>
+                  <span>
+                    {format(new Date(stats.period.from), 'd MMM yyyy', { locale: fr })} —{' '}
+                    {format(new Date(stats.period.to), 'd MMM yyyy', { locale: fr })}
+                  </span>
                 </p>
               </div>
             ) : null}
