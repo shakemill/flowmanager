@@ -33,10 +33,21 @@ const Profile = () => {
   const email = session?.user?.email ?? null;
   const initials = getInitials(name, email);
 
-  const trigger = (
+  const avatar = (
     <span className="h-10 w-10 hover:text-primary hover:bg-lightprimary rounded-full flex justify-center items-center cursor-pointer group-hover/menu:bg-lightprimary group-hover/menu:text-primary bg-primary/10 text-primary text-sm font-semibold shrink-0">
       {initials}
     </span>
+  );
+
+  const trigger = (
+    <button className="flex items-center gap-2 cursor-pointer rounded-full hover:bg-lightprimary px-1 py-1 pr-3 transition-colors">
+      {avatar}
+      {name && (
+        <span className="hidden sm:block text-sm font-medium text-dark dark:text-white truncate max-w-[150px]">
+          {name}
+        </span>
+      )}
+    </button>
   );
 
   return (
@@ -74,7 +85,7 @@ const Profile = () => {
         </DropdownMenuContent>
       </DropdownMenu>
       ) : (
-        trigger
+        avatar
       )}
     </div>
   );
