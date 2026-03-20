@@ -1,27 +1,49 @@
-# Migration en échec (P3009) — procédure
+# Migration `20260320053732_add_organigramme_stats_indexes` — dépannage
 
-Si `migrate deploy` a échoué sur une version antérieure de ce fichier (avec `RENAME INDEX`) :
+## P3009 (migration marquée « failed »)
 
-1. Marquer la migration comme annulée côté Prisma :
-   ```bash
-   npx prisma migrate resolve --rolled-back 20260320053732_add_organigramme_stats_indexes
-   ```
+```bash
+npx prisma migrate resolve --rolled-back 20260320053732_add_organigramme_stats_indexes
+npx prisma migrate deploy
+```
 
-2. Dans MySQL, vérifier les index partiellement créés :
-   ```sql
-   SHOW INDEX FROM Courrier WHERE Key_name IN ('Courrier_dateArrivee_idx', 'Courrier_entiteTraitanteId_dateArrivee_idx');
-   ```
-   Les supprimer si besoin avant de redéployer :
-   ```sql
-   DROP INDEX `Courrier_dateArrivee_idx` ON `Courrier`;
-   DROP INDEX `Courrier_entiteTraitanteId_dateArrivee_idx` ON `Courrier`;
-   ```
-   (ignorez l’erreur si l’index n’existe pas.)
+## P3018 « Duplicate key name Courrier_dateArrivee_idx »
 
-3. Relancer :
-   ```bash
-   npx prisma migrate deploy
-   ```
+L’index `Courrier_dateArrivee_idx` existe déjà suite à une tentative partielle. Le supprimer puis relancer `migrate deploy` :
 
-Si les deux index existent déjà et sont corrects, vous pouvez au lieu de 1–3 faire :
-`npx prisma migrate resolve --applied 20260320053732_add_organigramme_stats_indexes`
+```bash
+npx prisma migrate resolve --rolled-back 20260320053732_add_organigramme_stats_indexes
+```
+
+Puis avec `mysql` ou `npx prisma db execute --stdin --schema prisma/schema.prisma` :
+
+```sql
+DROP INDEX `Courrier_dateArrivee_idx` ON `Courrier`;
+```
+
+## P3018 sur `Courrier_entiteTraitanteId_dateArrivee_idx` (composite déjà présent)
+
+MySQL sert ce composite à la FK sur `entiteTraitanteId`. Il faut un index de secours avant de le supprimer :
+
+```bash
+npx prisma migrate resolve --rolled-back 20260320053732_add_organigramme_stats_indexes
+```
+
+```sql
+CREATE INDEX `Courrier_tmp_entite_idx` ON `Courrier`(`entiteTraitanteId`);
+DROP INDEX `Courrier_entiteTraitanteId_dateArrivee_idx` ON `Courrier`;
+```
+
+```bash
+npx prisma migrate deploy
+```
+
+```sql
+DROP INDEX `Courrier_tmp_entite_idx` ON `Courrier`;
+```
+
+## Tout est déjà appliqué manuellement
+
+```bash
+npx prisma migrate resolve --applied 20260320053732_add_organigramme_stats_indexes
+```
